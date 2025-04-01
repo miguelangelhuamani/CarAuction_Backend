@@ -2,6 +2,10 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 
+from django.core.exceptions import ValidationError
+from django.utils.timezone import now
+from datetime import timedelta
+
 # Create your models here.
 class Category(models.Model):
     name = models.CharField(max_length=50, blank=False, unique=True)
@@ -11,7 +15,13 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+#Validación personalizada (DUDA)
+def validate_closing_date(value):
+    """ Valida que la fecha de cierre sea al menos 15 días después de la fecha de creación """
+    min_date = now() + timedelta(days=15)
+    if value < min_date:
+        raise ValidationError(f"La fecha de cierre debe ser al menos 15 días después de hoy ({min_date.date()}).")
 
 class Auction(models.Model):
     title = models.CharField(max_length=150)
