@@ -25,7 +25,11 @@ SECRET_KEY = "django-insecure-jwn+3b6&zb0bho6an1@gtbw1$!1x-8()6@6z#-dycce7cd*1@k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1"]
+
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1"]
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -40,6 +44,7 @@ INSTALLED_APPS = [
     "auctions",
     "rest_framework",
     "drf_spectacular",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -50,6 +55,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "planBackend.urls"
