@@ -5,56 +5,57 @@ from rest_framework import generics
 from .models import Category, Auction, Bid
 from .serializers import CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, BidListCreateSerializer, BidDetailSerializer
 
-from django.db.models import Q  #Para la validación de filtro
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-# Category Views
+#PERMISOS
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from .permissions import IsOwnerOrAdmin
+
 class CategoryListCreate(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryListCreateSerializer
+    permission_classes = [IsAdminUser]  # Solo admin puede crear/modificar categorías
 
 class CategoryRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryDetailSerializer
+    permission_classes = [IsAdminUser]  # Solo admin puede editar/eliminar categorías
 
-
-# Auction Views
 class AuctionListCreate(generics.ListCreateAPIView):
+    queryset = Auction.objects.all()
     serializer_class = AuctionListCreateSerializer
-
-    def get_queryset(self):
-        queryset = Auction.objects.all()
-        params = self.request.query_params
-
-        search = params.get('text', None)
-        if search:
-            queryset = queryset.filter(Q(title__icontains=search) | Q(description__icontains=search))
-
-        category = params.get('category', None)
-        if category:
-            queryset = queryset.filter(category__name__icontains=category)
-
-        min_price = params.get("MinPrice", None)
-        max_price = params.get("MaxPrice", None)
-        if min_price is not None and max_price is not None:
-            queryset = queryset.filter(starting_price__gte=min_price, starting_price__lte=max_price)
-        elif min_price is not None:
-            queryset = queryset.filter(starting_price__gte=min_price)
-        elif max_price is not None:
-            queryset = queryset.filter(starting_price__lte=max_price)
-
-        return queryset
-
+    permission_classes = [IsAuthenticated]  # Cualquier usuario autenticado puede crear subastas
 
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Auction.objects.all()
     serializer_class = AuctionDetailSerializer
+    permission_classes = [IsOwnerOrAdmin]  # Solo dueño o admin puede modificar/eliminar
 
-
-# Bid Views
 class BidListCreate(generics.ListCreateAPIView):
-    queryset = Bid.objects.all()
     serializer_class = BidListCreateSerializer
+    permission_classes = [IsAuthenticated]  # Cualquier usuario autenticado puede pujar
+
+    def get_queryset(self):
+        auction_id = self.kwargs['auction_id']
+        return Bid.objects.filter(auction__id=auction_id)
 
 class BidRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Bid.objects.all()
     serializer_class = BidDetailSerializer
+    permission_classes = [IsOwnerOrAdmin]  # Solo dueño de la puja o admin puede modificar/eliminar
+
+    def get_queryset(self):
+        auction_id = self.kwargs['auction_id']
+        return Bid.objects.filter(auction__id=auction_id)
+
+class UserAuctionListView(APIView):
+    permission_classes = [IsAuthenticated]  # Correcto - solo usuarios autenticados
+
+    def get(self, request, *args, **kwargs):
+        # Obtener las subastas del usuario autenticado
+        user_auctions = Auction.objects.filter(auctioneer=request.user)
+        serializer = AuctionListCreateSerializer(user_auctions, many=True)
+        return Response(serializer.data)
+    
+class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsOwnerOrAdmin]  # Correcto - protección para operaciones sensibles

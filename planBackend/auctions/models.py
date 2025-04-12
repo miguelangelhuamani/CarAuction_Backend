@@ -1,10 +1,10 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.contrib.auth.models import User
 
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
-from datetime import timedelta
+
+from users.models import CustomUser
 
 # Create your models here.
 class Category(models.Model):
@@ -15,13 +15,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
-#Validación personalizada (DUDA)
-def validate_closing_date(value):
-    """ Valida que la fecha de cierre sea al menos 15 días después de la fecha de creación """
-    min_date = now() + timedelta(days=15)
-    if value < min_date:
-        raise ValidationError(f"La fecha de cierre debe ser al menos 15 días después de hoy ({min_date.date()}).")
 
 class Auction(models.Model):
     title = models.CharField(max_length=150)
@@ -35,6 +28,8 @@ class Auction(models.Model):
     category = models.ForeignKey(Category, related_name='auctions',on_delete=models.CASCADE)
     brand = models.CharField(max_length=100)
 
+    auctioneer = models.ForeignKey(CustomUser, related_name='auctions',on_delete=models.CASCADE)
+
     class Meta:
         ordering=('id',)
 
@@ -45,12 +40,11 @@ class Auction(models.Model):
 class Bid(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     creation_date = models.DateTimeField(auto_now_add=True)
-    bidder = models.ForeignKey(User, on_delete=models.CASCADE)
+    bidder = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     auction = models.ForeignKey(Auction, related_name='bids', on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('-amount',)
 
     def __str__(self):
-        return self.amount
-
+        return str(self.amount)
