@@ -28,7 +28,7 @@ class Auction(models.Model):
     category = models.ForeignKey(Category, related_name='auctions',on_delete=models.CASCADE)
     brand = models.CharField(max_length=100)
 
-    auctioneer = models.ForeignKey(CustomUser, related_name='auctions',on_delete=models.CASCADE)
+    auctioneer = models.ForeignKey(CustomUser, related_name='auctions',on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         ordering=('id',)
@@ -40,7 +40,7 @@ class Auction(models.Model):
 class Bid(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     creation_date = models.DateTimeField(auto_now_add=True)
-    bidder = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    bidder = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
     auction = models.ForeignKey(Auction, related_name='bids', on_delete=models.CASCADE)
 
     class Meta:
