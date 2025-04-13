@@ -9,13 +9,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 #PERMISOS
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
 from .permissions import IsOwnerOrAdmin
 
 class CategoryListCreate(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryListCreateSerializer
-    permission_classes = [IsAdminUser]  # Solo admin puede crear/modificar categorías
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Solo admin puede crear/modificar categorías
 
 class CategoryRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
@@ -25,7 +25,7 @@ class CategoryRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 class AuctionListCreate(generics.ListCreateAPIView):
     queryset = Auction.objects.all()
     serializer_class = AuctionListCreateSerializer
-    permission_classes = [IsAuthenticated]  # Cualquier usuario autenticado puede crear subastas
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Cualquier usuario autenticado puede crear subastas
 
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Auction.objects.all()
@@ -34,7 +34,7 @@ class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 
 class BidListCreate(generics.ListCreateAPIView):
     serializer_class = BidListCreateSerializer
-    permission_classes = [IsAuthenticated]  # Cualquier usuario autenticado puede pujar
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Cualquier usuario autenticado puede pujar
 
     def get_queryset(self):
         auction_id = self.kwargs['auction_id']
