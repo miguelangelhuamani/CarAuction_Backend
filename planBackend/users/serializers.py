@@ -4,7 +4,7 @@ from .models import CustomUser
 class UserSerializer(serializers.ModelSerializer):  #Serializador para TODAS las operaciones CRUD
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'birth_date', 'municipality',
+        fields = ('id', 'username', 'email', 'birth_date', 'municipality', 
         'locality', 'password')
         extra_kwargs = {
             'password': {'write_only': True},   #parametro de entrada que NUNCA SE DEVOLVERÁ
