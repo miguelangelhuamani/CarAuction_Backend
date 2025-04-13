@@ -54,7 +54,7 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     isOpen = serializers.SerializerMethodField(read_only=True)
 
     auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
-    auctioneer_id = serializers.IntegerField(write_only=True, required=False)
+    auctioneer_id = serializers.IntegerField()
 
     class Meta:
         model = Auction
