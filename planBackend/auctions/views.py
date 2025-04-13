@@ -15,7 +15,7 @@ from .permissions import IsOwnerOrAdmin
 class CategoryListCreate(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryListCreateSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # Solo admin puede crear/modificar categorías
+    #permission_classes = [IsAuthenticatedOrReadOnly]  # Solo admin puede crear/modificar categorías
 
 class CategoryRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
@@ -25,7 +25,7 @@ class CategoryRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 class AuctionListCreate(generics.ListCreateAPIView):
     queryset = Auction.objects.all()
     serializer_class = AuctionListCreateSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # Cualquier usuario autenticado puede crear subastas
+    #permission_classes = [IsAuthenticatedOrReadOnly]  # Cualquier usuario autenticado puede crear subastas
 
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Auction.objects.all()
@@ -56,6 +56,11 @@ class UserAuctionListView(APIView):
         user_auctions = Auction.objects.filter(auctioneer=request.user)
         serializer = AuctionListCreateSerializer(user_auctions, many=True)
         return Response(serializer.data)
-    
-class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsOwnerOrAdmin]  # Correcto - protección para operaciones sensibles
+
+class UserBidListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user_bids = Bid.objects.filter(bidder=request.user)
+        serializer = BidListCreateSerializer(user_bids, many=True)
+        return Response(serializer.data)
