@@ -15,7 +15,7 @@ from .permissions import IsOwnerOrAdmin
 class CategoryListCreate(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryListCreateSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # Solo admin puede crear/modificar categorías
+    # permission_classes = [IsAuthenticatedOrReadOnly]  # Solo admin puede crear/modificar categorías
 
 class CategoryRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
@@ -57,5 +57,3 @@ class UserAuctionListView(APIView):
         serializer = AuctionListCreateSerializer(user_auctions, many=True)
         return Response(serializer.data)
     
-class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsOwnerOrAdmin]  # Correcto - protección para operaciones sensibles

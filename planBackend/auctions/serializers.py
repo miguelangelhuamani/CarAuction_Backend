@@ -4,23 +4,32 @@ from .models import Category, Auction, Bid
 from datetime import timedelta
 from drf_spectacular.utils import extend_schema_field
 
+# ------------------------------
 # Category Serializers
+# ------------------------------
+
 class CategoryListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id','name']
+        fields = ['id', 'name']
 
 class CategoryDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
 
-
+# ------------------------------
 # Auction Serializers
+# ------------------------------
+
 class AuctionListCreateSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
+
+    # Añadimos los campos personalizados:
+    auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
+    auctioneer_id = serializers.IntegerField(write_only=True, required=True)
 
     class Meta:
         model = Auction
@@ -31,7 +40,6 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
         return obj.closing_date > timezone.now()
     
     def validate_closing_date(self, value):
-        # Validación de la fecha de cierre
         if value <= timezone.now():
             raise serializers.ValidationError("La fecha de cierre no puede ser menor ni igual a la fecha de creación.")
         
@@ -44,7 +52,10 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
-    
+
+    auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
+    auctioneer_id = serializers.IntegerField(write_only=True, required=False)
+
     class Meta:
         model = Auction
         fields = '__all__'
@@ -53,8 +64,10 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     def get_isOpen(self, obj):
         return obj.closing_date > timezone.now()
 
+# ------------------------------
+# Bid Serializers
+# ------------------------------
 
-#Bid Serializers
 class BidListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bid
@@ -64,10 +77,11 @@ class BidListCreateSerializer(serializers.ModelSerializer):
         if data["auction"].closing_date <= timezone.now():
             raise serializers.ValidationError("La subasta ya está cerrada, no se puede pujar.")
 
-        last_bid = Bid.objects.filter(auction=data["auction"]).order_by('-price').first()  # Última puja ganadora
+        last_bid = Bid.objects.filter(auction=data["auction"]).order_by('-price').first()
 
         if last_bid and data['price'] <= last_bid.price:
             raise serializers.ValidationError(f"El precio de la nueva puja debe ser mayor que la puja ganadora actual ({last_bid.price}).")
+
         return data
 
 class BidDetailSerializer(serializers.ModelSerializer):
