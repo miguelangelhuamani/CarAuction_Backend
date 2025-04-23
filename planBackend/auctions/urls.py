@@ -1,18 +1,26 @@
 from django.urls import path
-from .views import CategoryListCreate, CategoryRetrieveUpdateDestroy, AuctionListCreate, AuctionRetrieveUpdateDestroy, BidListCreate, BidRetrieveUpdateDestroy, UserAuctionListView, UserBidListView
+from .views import (CategoryListCreate, CategoryRetrieveUpdateDestroy, 
+                    AuctionListCreate, AuctionRetrieveUpdateDestroy, BidListCreate, 
+                    BidRetrieveUpdateDestroy, UserAuctionListView, UserBidListView,
+                    AuctionCategoryListView)
 
 
 app_name="auctions"
+# El pk es la PRIMARY KEY
 urlpatterns = [
     #Auctions URLs
     path('', AuctionListCreate.as_view(), name='auction-list-create'),
     path('<int:pk>/', AuctionRetrieveUpdateDestroy.as_view(), name='auction-detail'),
+    path('categories/<int:pk>/auctions', AuctionCategoryListView.as_view(), name = 'auction-category'),
+
 
     #Categories URLs
     path('categories/', CategoryListCreate.as_view(), name='category-list-create'),
-    path('categories/<int:pk>/', CategoryRetrieveUpdateDestroy.as_view(), name='category-detail'),
 
-    #Bis URLs
+    # obtener una determinada categoría 
+    path('categories/<int:pk>/', CategoryRetrieveUpdateDestroy.as_view(), name='category-detail'), 
+
+    #Bid URLs
     path('<int:auction_id>/bids/', BidListCreate.as_view(), name='bid-list-create'),
     path('<int:auction_id>/bids/<int:pk>/', BidRetrieveUpdateDestroy.as_view(), name='bid-detail'),
 
