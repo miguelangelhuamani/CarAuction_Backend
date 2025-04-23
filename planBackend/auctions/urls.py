@@ -11,7 +11,7 @@ urlpatterns = [
     #Auctions URLs
     path('', AuctionListCreate.as_view(), name='auction-list-create'),
     path('<int:pk>/', AuctionRetrieveUpdateDestroy.as_view(), name='auction-detail'),
-    path('categories/<int:pk>/auctions', AuctionCategoryListView.as_view(), name = 'auction-category'),
+    path('categories/<int:category_id>/auctions', AuctionCategoryListView.as_view(), name = 'auction-category'),
 
 
     #Categories URLs

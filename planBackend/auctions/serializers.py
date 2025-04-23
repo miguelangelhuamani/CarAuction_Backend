@@ -18,9 +18,12 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
 
 # Auction Serializers
 class AuctionListCreateSerializer(serializers.ModelSerializer):
+
+    # Añadir que se guarda el nombre de la categoría
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
 
     # Añadimos los campos personalizados:
     auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
