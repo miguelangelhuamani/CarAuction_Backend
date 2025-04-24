@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (CategoryListCreate, CategoryRetrieveUpdateDestroy, 
                     AuctionListCreate, AuctionRetrieveUpdateDestroy, BidListCreate, 
                     BidRetrieveUpdateDestroy, UserAuctionListView, UserBidListView,
-                    AuctionCategoryListView)
+                    )
 
 
 app_name="auctions"
@@ -11,14 +11,13 @@ urlpatterns = [
     #Auctions URLs
     path('', AuctionListCreate.as_view(), name='auction-list-create'),
     path('<int:pk>/', AuctionRetrieveUpdateDestroy.as_view(), name='auction-detail'),
-    path('categories/<int:category_id>/auctions', AuctionCategoryListView.as_view(), name = 'auction-category'),
 
 
     #Categories URLs
     path('categories/', CategoryListCreate.as_view(), name='category-list-create'),
 
     # obtener una determinada categoría 
-    path('categories/<int:pk>/', CategoryRetrieveUpdateDestroy.as_view(), name='category-detail'), 
+    path('categories/<int:pk>/', CategoryRetrieveUpdateDestroy.as_view(), name='category-detail'),
 
     #Bid URLs
     path('<int:auction_id>/bids/', BidListCreate.as_view(), name='bid-list-create'),
