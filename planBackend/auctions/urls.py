@@ -7,6 +7,7 @@ from .views import (CategoryListCreate, CategoryRetrieveUpdateDestroy,
 
 app_name="auctions"
 # El pk es la PRIMARY KEY
+
 urlpatterns = [
     #Auctions URLs
     path('', AuctionListCreate.as_view(), name='auction-list-create'),
