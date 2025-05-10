@@ -64,6 +64,9 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
     auctioneer_id = serializers.IntegerField()
     
+    # Aquí añadimos el campo asociado al Rating
+    avg_rating = serializers.SerializerMethodField(read_only = True)
+    
     class Meta:
         model = Auction
         fields = '__all__'
@@ -71,6 +74,23 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.BooleanField())
     def get_isOpen(self, obj):
         return obj.closing_date > timezone.now()
+    
+    @extend_schema_field(serializers.DecimalField(max_digits=3, decimal_places=2))
+    def get_avg_rating(self, obj):
+        ratings = obj.ratings.all()
+
+        avg = sum(rating.rating for rating in ratings) / len(ratings) if ratings else 0
+        return avg
+    
+    def validate_closing_date(self, value):
+        # Validación de la fecha de cierre
+        if value <= timezone.now():
+            raise serializers.ValidationError("La fecha de cierre no puede ser menor ni igual a la fecha de creación.")
+        
+        if value < timezone.now() + timedelta(days=15):
+            raise serializers.ValidationError("La fecha de cierre debe ser al menos 15 días mayor que la fecha de creación.")
+        
+        return value
 
 
 #Bid Serializers
@@ -112,5 +132,6 @@ class RatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
         fields = '__all__'
+        read_only_fields = ['auction', 'rater']
     
     

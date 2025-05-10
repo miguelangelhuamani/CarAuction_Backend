@@ -1,0 +1,44 @@
+[
+  {
+    "model": "auctions.category",
+    "pk": 1,
+    "fields": {
+      "name": "Sedan"
+    }
+  },
+  {
+    "model": "auctions.category",
+    "pk": 2,
+    "fields": {
+      "name": "SUV"
+    }
+  },
+  {
+    "model": "auctions.category",
+    "pk": 3,
+    "fields": {
+      "name": "Truck"
+    }
+  },
+  {
+    "model": "auctions.category",
+    "pk": 4,
+    "fields": {
+      "name": "Motorcycle"
+    }
+  },
+  {
+    "model": "auctions.category",
+    "pk": 5,
+    "fields": {
+      "name": "Van"
+    }
+  },
+  {
+    "model": "auctions.category",
+    "pk": 6,
+    "fields": {
+      "name": "Convertible"
+    }
+  }
+]

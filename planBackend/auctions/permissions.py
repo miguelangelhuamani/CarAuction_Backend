@@ -10,4 +10,10 @@ class IsOwnerOrAdmin(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         # Permitir si el usuario es el creador o es administrador
-        return obj.auctioneer == request.user or request.user.is_staff
+        return obj.auctioneer == request.user or request.user.is_staff or obj.rater == request.user
+
+class IsRatingOwnerOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        return obj.rater == request.user or request.user.is_staff

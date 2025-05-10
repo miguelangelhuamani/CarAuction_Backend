@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 #PERMISOS
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
-from .permissions import IsOwnerOrAdmin
+from .permissions import IsOwnerOrAdmin, IsRatingOwnerOrAdmin
 
 class CategoryListCreate(generics.ListCreateAPIView):
     queryset = Category.objects.all()
@@ -55,7 +55,7 @@ class AuctionListCreate(generics.ListCreateAPIView):
         serializer.save(auctioneer=self.request.user)
 
         Rating.objects.create(
-            rating=1.0,
+            rating=1.0, # por defecto 1.0
             auction=serializer.instance,
             rater=self.request.user
         )
@@ -134,8 +134,20 @@ class RatingListCreate(APIView):
 class RatingRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
-    permission_classes = [IsOwnerOrAdmin]  # Solo dueño de la puja o admin puede modificar/eliminar
+    permission_classes = [IsRatingOwnerOrAdmin]  # Solo dueño de la valoración o admin puede modificar/eliminar
 
     def get_queryset(self):
         auction_id = self.kwargs['auction_id']
         return Rating.objects.filter(auction__id=auction_id)
+
+class RatingUserAuctionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, auction_id):
+        try:
+            rating = Rating.objects.get(auction__id=auction_id, rater=request.user)
+            serializer = RatingSerializer(rating)
+            return Response(serializer.data)
+        
+        except Rating.DoesNotExist:
+            return Response({"detail": "No has valorado esta subasta."}, status=404)
