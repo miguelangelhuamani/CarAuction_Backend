@@ -2,8 +2,9 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import generics, status
-from .models import Category, Auction, Bid
-from .serializers import CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, BidListCreateSerializer, BidDetailSerializer
+from .models import Category, Auction, Bid, Rating
+from .serializers import (CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, 
+                          BidListCreateSerializer, BidDetailSerializer, RatingSerializer)
 from django.db.models import Q
 
 from rest_framework.exceptions import ValidationError
@@ -49,6 +50,15 @@ class AuctionListCreate(generics.ListCreateAPIView):
 
         return queryset
 
+    def perform_create(self, serializer):
+        # Guardar el usuario autenticado como subastador
+        serializer.save(auctioneer=self.request.user)
+
+        Rating.objects.create(
+            rating=1.0,
+            auction=serializer.instance,
+            rater=self.request.user
+        )
 
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Auction.objects.all()
@@ -95,3 +105,37 @@ class UserBidListView(APIView):
         serializer = BidListCreateSerializer(user_bids, many=True)
         return Response(serializer.data)
 
+
+
+# Rating Views
+class RatingListCreate(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        auction_id = self.kwargs['auction_id']
+        ratings = Rating.objects.filter(auction__id=auction_id)
+        serializer = RatingSerializer(ratings, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, *args, **kwargs):
+        # Validar que cada usuario valora solo una cez una subasta
+        auction_id = self.kwargs['auction_id']
+        auction = Auction.objects.get(pk=auction_id)
+
+        if Rating.objects.filter(auction=auction, rater=request.user).exists():
+            raise ValidationError("Ya has valorado esta subasta.")
+
+        serializer = RatingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(rater=self.request.user, auction=auction)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RatingRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Rating.objects.all()
+    serializer_class = RatingSerializer
+    permission_classes = [IsOwnerOrAdmin]  # Solo dueño de la puja o admin puede modificar/eliminar
+
+    def get_queryset(self):
+        auction_id = self.kwargs['auction_id']
+        return Rating.objects.filter(auction__id=auction_id)

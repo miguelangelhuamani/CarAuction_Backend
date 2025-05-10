@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Category, Auction, Bid
+from .models import Category, Auction, Bid, Rating
 from datetime import timedelta
 from drf_spectacular.utils import extend_schema_field
 
@@ -29,6 +29,9 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
     auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
     auctioneer_id = serializers.IntegerField(write_only=True, required=True)
 
+    # Aquí añadimos el campo asociado al Rating
+    avg_rating = serializers.SerializerMethodField(read_only = True)
+
     class Meta:
         model = Auction
         fields = '__all__'
@@ -36,6 +39,13 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.BooleanField())
     def get_isOpen(self, obj):
         return obj.closing_date > timezone.now()
+    
+    @extend_schema_field(serializers.DecimalField(max_digits=3, decimal_places=2))
+    def get_avg_rating(self, obj):
+        ratings = obj.ratings.all()
+
+        avg = sum(rating.rating for rating in ratings) / len(ratings) if ratings else 0
+        return avg
     
     def validate_closing_date(self, value):
         # Validación de la fecha de cierre
@@ -97,3 +107,10 @@ class BidDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bid
         fields = '__all__'
+
+class RatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rating
+        fields = '__all__'
+    
+    
