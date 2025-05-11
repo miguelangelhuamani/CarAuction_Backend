@@ -27,7 +27,6 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
 
     # Añadimos los campos personalizados:
     auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
-    auctioneer_id = serializers.IntegerField(write_only=True, required=True)
 
     # Aquí añadimos el campo asociado al Rating
     avg_rating = serializers.SerializerMethodField(read_only = True)
@@ -62,7 +61,7 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
     auctioneer = serializers.CharField(source="auctioneer.username", read_only=True)
-    auctioneer_id = serializers.IntegerField()
+    auctioneer_id = serializers.IntegerField(read_only=True)
     
     # Aquí añadimos el campo asociado al Rating
     avg_rating = serializers.SerializerMethodField(read_only = True)
@@ -82,15 +81,15 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
         avg = sum(rating.rating for rating in ratings) / len(ratings) if ratings else 0
         return avg
     
-    def validate_closing_date(self, value):
+    def validate(self, data):
         # Validación de la fecha de cierre
-        if value <= timezone.now():
+        if data['closing_date'] <= data['creation_date']:
             raise serializers.ValidationError("La fecha de cierre no puede ser menor ni igual a la fecha de creación.")
         
-        if value < timezone.now() + timedelta(days=15):
+        if data['closing_date'] < data['creation_date'] + timedelta(days=15):
             raise serializers.ValidationError("La fecha de cierre debe ser al menos 15 días mayor que la fecha de creación.")
         
-        return value
+        return data
 
 
 #Bid Serializers
