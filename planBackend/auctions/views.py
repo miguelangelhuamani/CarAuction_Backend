@@ -2,9 +2,9 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import generics, status
-from .models import Category, Auction, Bid, Rating
+from .models import Category, Auction, Bid, Rating, Comment
 from .serializers import (CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, 
-                          BidListCreateSerializer, BidDetailSerializer, RatingSerializer)
+                          BidListCreateSerializer, BidDetailSerializer, RatingSerializer, CommentSerializer)
 from django.db.models import Q
 
 from rest_framework.exceptions import ValidationError
@@ -151,3 +151,23 @@ class RatingUserAuctionView(APIView):
         
         except Rating.DoesNotExist:
             return Response({"detail": "No has valorado esta subasta."}, status=404)
+
+class CommentListCreate(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    #permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        auction_id = self.kwargs['auction_id']
+        print("ID recibido en vista:", auction_id)  # ← TEMPORAL
+        return Comment.objects.filter(auction_id=auction_id)
+
+    def perform_create(self, serializer):
+        auction_id = self.kwargs['auction_id']
+        serializer.save(user=self.request.user, auction_id=auction_id)
+
+class CommentRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CommentSerializer
+    #permission_classes = [IsOwnerOrAdmin]
+
+    def get_queryset(self):
+        return Comment.objects.all()
