@@ -10,6 +10,7 @@ from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.utils import timezone
 
 #PERMISOS
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
@@ -35,6 +36,7 @@ class AuctionListCreate(generics.ListCreateAPIView):
 
         search = params.get('search')
         category = params.get('category')
+        open = params.get('open')
 
         if search and len(search) <1: # validación para comprobar que la querysearch sea de como mínimo 1 caracter
             raise ValidationError("La búsqueda debe tener al menos 1 carácter",             
@@ -47,6 +49,14 @@ class AuctionListCreate(generics.ListCreateAPIView):
 
         if category:
             queryset = queryset.filter(category__id=category)
+        
+        if open:
+            print(open)
+            if open == "true":
+                queryset = queryset.filter(closing_date__gt = timezone.now())
+            else:
+                queryset = queryset.filter(closing_date__lt = timezone.now())
+
 
         return queryset
 
