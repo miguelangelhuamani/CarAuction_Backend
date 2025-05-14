@@ -2,7 +2,7 @@ from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import CustomUser, UserWallet
-from .serializers import UserSerializer, ChangePasswordSerializer, UserWalletSerializer, DepositSerializer
+from .serializers import UserSerializer, ChangePasswordSerializer, UserWalletSerializer, DepositSerializer, WalletDetailSerializer, WithdrawSerializer
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
@@ -112,6 +112,7 @@ class WalletCreate(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
+        
 
         if UserWallet.objects.filter(user=user).exists():
             raise ValidationError("User already has a wallet.")
@@ -119,7 +120,7 @@ class WalletCreate(generics.CreateAPIView):
 
 class WalletDetail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = UserWalletSerializer
+    serializer_class = WalletDetailSerializer
 
     
     def get_object(self):
@@ -150,9 +151,9 @@ class DepositView(APIView):
 
 class WithDrawView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def post(self, request):
-        serializer = UserWalletSerializer(data = request.data)
+        serializer = DepositSerializer(data=request.data)
 
         if serializer.is_valid():
             try:

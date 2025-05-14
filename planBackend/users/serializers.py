@@ -35,12 +35,19 @@ Serializadores asociados a la gestión de carteras
 class UserWalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserWallet
-        fields = '__all__'
+        fields = ['card_number']
     
     def validate_card_number(self, value):
         if not value.isdigit():
+            print("error")
             raise serializers.ValidationError("Error: Card number must contain digits only.")
 
+        return value
+
+class WalletDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserWallet
+        fields = "__all__"
 
 class DepositSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
