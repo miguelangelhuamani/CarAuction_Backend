@@ -1,8 +1,8 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import CustomUser
-from .serializers import UserSerializer, ChangePasswordSerializer
+from .models import CustomUser, UserWallet
+from .serializers import UserSerializer, ChangePasswordSerializer, UserWalletSerializer, DepositSerializer
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
@@ -98,4 +98,75 @@ class LogoutView(APIView):
         
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
- 
+        
+
+"""
+Serializadores asociados a Wallet
+"""
+
+
+
+class WalletCreate(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserWalletSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        if UserWallet.objects.filter(user=user).exists():
+            raise ValidationError("User already has a wallet.")
+        serializer.save(user=user)
+
+class WalletDetail(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserWalletSerializer
+
+    
+    def get_object(self):
+        try:
+            return UserWallet.objects.get(user=self.request.user)
+        
+        except UserWallet.DoesNotExist:
+            raise ValidationError("User does not have a wallet yet.")
+
+
+class DepositView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = DepositSerializer(data=request.data)
+        if serializer.is_valid():
+
+            try:
+                user_wallet = UserWallet.objects.get(user=request.user)
+            except UserWallet.DoesNotExist:
+                return Response({"detail": "No wallet found."}, status=status.HTTP_404_NOT_FOUND)
+
+            user_wallet.balance += serializer.validated_data['amount']
+            user_wallet.save()
+            return Response({"detail": "Deposit successful."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class WithDrawView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = UserWalletSerializer(data = request.data)
+
+        if serializer.is_valid():
+            try:
+                user_wallet = UserWallet.objects.get(user=request.user)
+            except UserWallet.DoesNotExist:
+                return Response({"detail": "No wallet found."}, status=status.HTTP_404_NOT_FOUND)
+
+            amount = serializer.validated_data['amount']
+
+            if user_wallet.balance < amount:
+                return Response({"detail": "Insufficient funds."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user_wallet.balance -= amount
+            user_wallet.save()
+            return Response({"detail": "Deposit successful."}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

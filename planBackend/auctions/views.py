@@ -81,8 +81,9 @@ class BidListCreate(generics.ListCreateAPIView):
 
     def get_queryset(self):
         auction_id = self.kwargs['auction_id']
-        return Bid.objects.filter(auction__id=auction_id)
-
+        queryset= Bid.objects.filter(auction__id=auction_id)
+        return queryset
+    
     def perform_create(self, serializer):
         auction_id = self.kwargs['auction_id']
         auction = Auction.objects.get(pk=auction_id)
