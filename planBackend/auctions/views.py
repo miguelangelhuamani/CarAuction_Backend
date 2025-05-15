@@ -19,16 +19,16 @@ from .permissions import IsOwnerOrAdmin, IsRatingOwnerOrAdmin
 class CategoryListCreate(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryListCreateSerializer
-    #permission_classes = [IsAuthenticatedOrReadOnly]  # Solo admin puede crear/modificar categorías
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Solo admin puede crear/modificar categorías
 
 class CategoryRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryDetailSerializer
-    permission_classes = [IsAdminUser]  # Solo admin puede editar/eliminar categorías
+    #permission_classes = [IsAdminUser]  # Solo admin puede editar/eliminar categorías
 
 class AuctionListCreate(generics.ListCreateAPIView):
     serializer_class = AuctionListCreateSerializer
-    #permission_classes = [IsAuthenticatedOrReadOnly]  # Cualquier usuario autenticado puede crear subastas
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Cualquier usuario autenticado puede crear subastas
 
     def get_queryset(self): 
         queryset = Auction.objects.all()
@@ -37,6 +37,7 @@ class AuctionListCreate(generics.ListCreateAPIView):
         search = params.get('search')
         category = params.get('category')
         open = params.get('open')
+        order = params.get('order')
 
         if search and len(search) <1: # validación para comprobar que la querysearch sea de como mínimo 1 caracter
             raise ValidationError("La búsqueda debe tener al menos 1 carácter",             
@@ -51,11 +52,16 @@ class AuctionListCreate(generics.ListCreateAPIView):
             queryset = queryset.filter(category__id=category)
         
         if open:
-            print(open)
             if open == "true":
                 queryset = queryset.filter(closing_date__gt = timezone.now())
             else:
                 queryset = queryset.filter(closing_date__lt = timezone.now())
+
+        if order == "asc":
+            queryset = queryset.order_by("price")
+
+        elif order == "desc":
+            queryset = queryset.order_by("-price")
 
 
         return queryset
@@ -165,11 +171,10 @@ class RatingUserAuctionView(APIView):
 
 class CommentListCreate(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
-    #permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         auction_id = self.kwargs['auction_id']
-        print("ID recibido en vista:", auction_id)  # ← TEMPORAL
         return Comment.objects.filter(auction_id=auction_id)
 
     def perform_create(self, serializer):

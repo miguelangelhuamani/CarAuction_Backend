@@ -31,6 +31,8 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
     # Aquí añadimos el campo asociado al Rating
     avg_rating = serializers.SerializerMethodField(read_only = True)
 
+    time_left = serializers.SerializerMethodField(read_only = True)
+
     class Meta:
         model = Auction
         fields = '__all__'
@@ -45,6 +47,24 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
 
         avg = sum(rating.rating for rating in ratings) / len(ratings) if ratings else 0
         return avg
+    
+    @extend_schema_field(serializers.CharField())
+    def get_time_left(self, obj):
+        remaining = obj.closing_date - timezone.now()
+
+        total_seconds = int(remaining.total_seconds())
+
+        days = total_seconds // 60*60*24  
+        hours = (total_seconds % 60*60*24 ) // 60*60
+        minutes = (total_seconds % 60*60) // 60
+
+        if days > 0:
+            return f"{days}d {hours}h {minutes}min"
+        elif hours > 0:
+            return f"{hours}h {minutes}min"
+        else:
+            return f"{minutes}min"
+
     
     def validate_closing_date(self, value):
         # Validación de la fecha de cierre
@@ -65,10 +85,14 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     
     # Aquí añadimos el campo asociado al Rating
     avg_rating = serializers.SerializerMethodField(read_only = True)
+
+    time_left = serializers.SerializerMethodField(read_only = True)
+
+    bid_counts = serializers.SerializerMethodField(read_only = True)
     
     class Meta:
         model = Auction
-        fields = '__all__'
+        fields = '__all__'  # ESTO INCLUYE SOLO CAMPOS DEL MODELO AUCTION (CUIDADOOOOOOOO)
 
     @extend_schema_field(serializers.BooleanField())
     def get_isOpen(self, obj):
@@ -81,12 +105,36 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
         avg = sum(rating.rating for rating in ratings) / len(ratings) if ratings else 0
         return avg
     
+    @extend_schema_field(serializers.CharField())
+    def get_time_left(self, obj):
+        remaining = obj.closing_date - timezone.now()
+
+        total_seconds = int(remaining.total_seconds())
+
+        days = total_seconds // 86400  
+        hours = (total_seconds % 86400) // 3600
+        minutes = (total_seconds % 3600) // 60
+
+        if days > 0:
+            return f"{days}d {hours}h {minutes}min"
+        elif hours > 0:
+            return f"{hours}h {minutes}min"
+        else:
+            return f"{minutes}min"
+
+
+    @extend_schema_field(serializers.IntegerField())
+    def get_bid_counts(self, obj):
+        total_bids = obj.bids.count()
+        return total_bids
+
+    
     def validate(self, data):
         # Validación de la fecha de cierre
-        if data['closing_date'] <= data['creation_date']:
+        if data['closing_date'] <= timezone.now():
             raise serializers.ValidationError("La fecha de cierre no puede ser menor ni igual a la fecha de creación.")
         
-        if data['closing_date'] < data['creation_date'] + timedelta(days=15):
+        if data['closing_date'] < timezone.now() + timedelta(days=15):
             raise serializers.ValidationError("La fecha de cierre debe ser al menos 15 días mayor que la fecha de creación.")
         
         return data

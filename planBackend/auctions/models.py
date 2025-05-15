@@ -48,7 +48,7 @@ class Rating(models.Model):
     class Meta:
         ordering = ("rating",)
         constraints = [
-            models.UniqueConstraint(fields=["auction", "rater"], name="unique_rating_per_user")
+            models.UniqueConstraint(fields=["auction", "rater"], name="unique_rating_per_user") # Esto impide que un mismo usuario (rater) valore (rating) más de una vez una misma subasta (auction).
         ]
 
     def __str__(self):
